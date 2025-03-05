@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: fastapi_crud  # PostgreSQL başlarken otomatik olarak bu veritabanını oluşturacak
+      POSTGRES_DB: fastapi_crud 
     ports:
       - "5432:5432"
     volumes:
@@ -25,7 +25,7 @@ services:
     restart: always
     depends_on:
       db:
-        condition: service_healthy  # FastAPI başlamadan önce PostgreSQL'in hazır olup olmadığını kontrol eder
+        condition: service_healthy  
     ports:
       - "8000:8000"
     environment:

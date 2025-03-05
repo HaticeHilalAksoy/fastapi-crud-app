@@ -4,7 +4,7 @@ from app.database import engine, Base
 
 app = FastAPI()
 
-# Veritabanı tablolarını oluştur
+
 Base.metadata.create_all(bind=engine)
 
 # Router'ı ekle
