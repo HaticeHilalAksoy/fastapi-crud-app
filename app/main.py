@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from app.routes import router
 from app.database import engine, Base
+
 app = FastAPI()
+
+# Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
 
+# Router'ı ekle
 app.include_router(router)
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI CRUD App is running!"}

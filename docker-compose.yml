@@ -2,17 +2,34 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:13
+    image: postgres:15
     container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: fastapi_db
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: fastapi_crud  # PostgreSQL başlarken otomatik olarak bu veritabanını oluşturacak
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy  # FastAPI başlamadan önce PostgreSQL'in hazır olup olmadığını kontrol eder
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@db:5432/fastapi_crud"
 
 volumes:
   postgres_data:
