@@ -20,17 +20,19 @@ def get_db():
 
 @router.get("/tasks/")
 async def get_tasks(db: Session = Depends(get_db)):
-    redis = get_redis()  
-    if not redis:
-        raise HTTPException(status_code=500, detail="Redis conneted is fail.")
-
+    redis = await anext(get_redis())  # ✅ Redis bağlantısını async alıyoruz
     cache_key = "tasks_list"
-    cached_tasks = redis.get(cache_key)
+    
+    cached_tasks = await redis.get(cache_key)  # ✅ `await` ekledik!
 
     if cached_tasks:
-        tasks = json.loads(cached_tasks)
+        try:
+            tasks = json.loads(cached_tasks)
+        except json.JSONDecodeError:
+            tasks = None
+
         if not tasks:  
-            redis.delete(cache_key)  
+            await redis.delete(cache_key)  
             cached_tasks = None  
 
     if cached_tasks:
@@ -39,24 +41,21 @@ async def get_tasks(db: Session = Depends(get_db)):
     tasks = db.query(Task).all()
     tasks_data = [{"id": task.id, "title": task.title, "description": task.description, "completed": task.completed} for task in tasks]
 
- 
-    redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else [])) 
+    await redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else []))  # ✅ `await` ekledik!
 
     return {"cached": False, "tasks": tasks_data}
 
 @router.post("/tasks/")
 async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
-    redis = get_redis()
-    if not redis:
-        raise HTTPException(status_code=500, detail="Redis conneted is fail.")
-
+    redis = await anext(get_redis())  # ✅ Redis bağlantısını async alıyoruz
     new_task = Task(title=task.title, description=task.description, completed=False)
+    
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
-    
+
     cache_key = "tasks_list"
-    cached_tasks = redis.get(cache_key)  
+    cached_tasks = await redis.get(cache_key)  # ✅ `await` ekledik!
 
     if cached_tasks:
         tasks_data = json.loads(cached_tasks)
@@ -70,6 +69,6 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
         "completed": new_task.completed
     })
 
-    redis.setex(cache_key, 60, json.dumps(tasks_data)) 
+    await redis.setex(cache_key, 60, json.dumps(tasks_data))  # ✅ `await` ekledik!
 
     return new_task
