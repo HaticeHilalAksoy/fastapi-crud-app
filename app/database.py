@@ -21,7 +21,6 @@ DB_PORT = os.getenv("DB_PORT", "5432")
 
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-
 # SQLAlchemy Bağlantısı
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -38,7 +37,9 @@ async def get_redis():
     Redis bağlantısını yöneten asenkron fonksiyon.
     """
     redis_client = redis.Redis(
-        host=REDIS_HOST, port=int(REDIS_PORT), decode_responses=True
+        host=REDIS_HOST,
+        port=int(REDIS_PORT),
+        decode_responses=True,
     )
     try:
         yield redis_client

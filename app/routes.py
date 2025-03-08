@@ -1,3 +1,7 @@
+"""
+Görev yönetimi için API uç noktalarını içeren modül.
+"""
+
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,18 +15,24 @@ router = APIRouter()
 
 
 class TaskCreate(BaseModel):
+    """Yeni görev oluşturma modelini tanımlayan sınıf."""
+
     title: str
     description: str
 
 
 class TaskUpdate(BaseModel):
+    """Mevcut görevi güncelleme modelini tanımlayan sınıf."""
+
     title: str
     description: str
     completed: bool
 
 
 def get_db():
-    """Veritabanı bağlantısını yöneten bağımlılık fonksiyonu"""
+    """
+    Veritabanı bağlantısını yöneten bağımlılık fonksiyonu.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -33,7 +43,7 @@ def get_db():
 @router.get("/tasks/")
 async def get_tasks(db: Session = Depends(get_db)):
     """
-    Tüm görevleri getir (Redis Cache Kullanımı)
+    Tüm görevleri getir (Redis Cache Kullanımı).
     """
     redis = await anext(get_redis())
     cache_key = "tasks_list"
@@ -71,7 +81,7 @@ async def get_tasks(db: Session = Depends(get_db)):
 @router.post("/tasks/")
 async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     """
-    Yeni görev oluştur (Redis Cache Güncellemesi Dahil)
+    Yeni görev oluştur (Redis Cache Güncellemesi Dahil).
     """
     redis = await anext(get_redis())
     new_task = Task(
@@ -109,7 +119,7 @@ async def update_task(
     db: Session = Depends(get_db),
 ):
     """
-    Görevi güncelle (Redis Cache Güncellemesi Dahil)
+    Görevi güncelle (Redis Cache Güncellemesi Dahil).
     """
     redis = await anext(get_redis())
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -142,7 +152,7 @@ async def update_task(
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: int, db: Session = Depends(get_db)):
     """
-    Görevi sil (Redis Cache Güncellemesi Dahil)
+    Görevi sil (Redis Cache Güncellemesi Dahil).
     """
     redis = await anext(get_redis())
     task = db.query(Task).filter(Task.id == task_id).first()

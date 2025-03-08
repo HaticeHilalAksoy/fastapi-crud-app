@@ -46,3 +46,12 @@ repos:
         # - C0116: "Missing function docstring" hatasını görmezden gel
         # - R0903: "Too few public methods" (Az sayıda public metot) hatasını görmezden gel
         # - E0401: "Import error" hatasını görmezden gel
+  - repo: https://github.com/PyCQA/pylint
+    hooks:
+      - id: pylint
+        args: ["--disable=R0903"]
+
+  - repo: https://github.com/pycqa/flake8
+    hooks:
+      - id: flake8
+        args: ["--max-line-length=100"]  # Default 79 yerine 100 karakter kullan
