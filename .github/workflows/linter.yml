@@ -1,0 +1,34 @@
+name: Linter Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install flake8 black pylint isort
+
+      - name: Run Flake8
+        run: flake8 app/
+
+      - name: Run Black
+        run: black --check app/
+
+      - name: Run Pylint
+        run: pylint app/
+
+      - name: Run isort
+        run: isort --check app/

@@ -1,15 +1,15 @@
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import Base, engine
 from app.routes import router
-from app.database import engine, Base
-import time
 
 app = FastAPI()
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,7 +26,8 @@ def wait_for_db():
         except Exception as e:
             print(f"❌ Database connection failed: {e}")
             retries -= 1
-            time.sleep(5) 
+            time.sleep(5)
+
 
 wait_for_db()
 
