@@ -1,5 +1,7 @@
+version: "3.8"
+
 services:
-  db:
+  postgres_db:
     image: postgres:15
     container_name: postgres_db
     restart: always
@@ -18,26 +20,27 @@ services:
       interval: 5s
       retries: 5
 
-  app:
+  fastapi_app:
     build: .
     container_name: fastapi_app
     restart: always
     depends_on:
-      db:
+      postgres_db:
         condition: service_healthy
-      redis:
+      redis_cache:
         condition: service_healthy
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: "postgresql://postgres:mysecretpassword@db:5432/fastapi_crud"
-      REDIS_URL: "redis://redis:6379/0"
+      DEPLOYMENT_TYPE: "compose"  # Docker ortamını belirtiyoruz
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
+      REDIS_URL: "redis://redis_cache:6379/0"
     volumes:
       - .:/app
     networks:
       - backend
 
-  redis:
+  redis_cache:
     image: redis:latest
     container_name: redis_cache
     restart: always
@@ -54,5 +57,5 @@ volumes:
   postgres_data:
 
 networks:
-  backend:  # Eksik olan network tanımlaması eklendi!
+  backend:
     driver: bridge

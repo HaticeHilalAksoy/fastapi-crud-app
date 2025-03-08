@@ -20,10 +20,10 @@ def get_db():
 
 @router.get("/tasks/")
 async def get_tasks(db: Session = Depends(get_db)):
-    redis = await anext(get_redis())  # ✅ Redis bağlantısını async alıyoruz
+    redis = await anext(get_redis()) 
     cache_key = "tasks_list"
     
-    cached_tasks = await redis.get(cache_key)  # ✅ `await` ekledik!
+    cached_tasks = await redis.get(cache_key) 
 
     if cached_tasks:
         try:
@@ -41,13 +41,13 @@ async def get_tasks(db: Session = Depends(get_db)):
     tasks = db.query(Task).all()
     tasks_data = [{"id": task.id, "title": task.title, "description": task.description, "completed": task.completed} for task in tasks]
 
-    await redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else []))  # ✅ `await` ekledik!
+    await redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else []))  
 
     return {"cached": False, "tasks": tasks_data}
 
 @router.post("/tasks/")
 async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
-    redis = await anext(get_redis())  # ✅ Redis bağlantısını async alıyoruz
+    redis = await anext(get_redis()) 
     new_task = Task(title=task.title, description=task.description, completed=False)
     
     db.add(new_task)
@@ -55,7 +55,7 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db.refresh(new_task)
 
     cache_key = "tasks_list"
-    cached_tasks = await redis.get(cache_key)  # ✅ `await` ekledik!
+    cached_tasks = await redis.get(cache_key)  
 
     if cached_tasks:
         tasks_data = json.loads(cached_tasks)
@@ -69,6 +69,6 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
         "completed": new_task.completed
     })
 
-    await redis.setex(cache_key, 60, json.dumps(tasks_data))  # ✅ `await` ekledik!
+    await redis.setex(cache_key, 60, json.dumps(tasks_data)) 
 
     return new_task
