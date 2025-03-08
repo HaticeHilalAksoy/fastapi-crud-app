@@ -14,9 +14,7 @@ DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "mysecretpassword")
 DB_NAME = os.getenv("POSTGRES_DB", "fastapi_crud")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
-DATABASE_URL = (
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # SQLAlchemy Bağlantısı
 engine = create_engine(DATABASE_URL)
@@ -30,7 +28,7 @@ REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 
 
 async def get_redis():
-    """ Redis bağlantısını yöneten asenkron fonksiyon """
+    """Redis bağlantısını yöneten asenkron fonksiyon"""
     redis_client = redis.Redis(
         host=REDIS_HOST, port=int(REDIS_PORT), decode_responses=True
     )
