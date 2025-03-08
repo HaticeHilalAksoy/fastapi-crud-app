@@ -46,3 +46,4 @@ async def get_redis():
     finally:
         # `aclose()` ile daha temiz kapatma
         await redis_client.aclose()
+        
