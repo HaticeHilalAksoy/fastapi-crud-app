@@ -1,4 +1,5 @@
 import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -62,7 +63,9 @@ async def get_tasks(db: Session = Depends(get_db)):
         for task in tasks
     ]
 
-    await redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else []))
+    await redis.setex(
+        cache_key, 60, json.dumps(tasks_data if tasks_data else [])
+    )
 
     return {"cached": False, "tasks": tasks_data}
 
@@ -99,17 +102,6 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     await redis.setex(cache_key, 60, json.dumps(tasks_data))
 
     return new_task
-
-
-@router.get("/tasks/{task_id}")
-async def get_task(task_id: int, db: Session = Depends(get_db)):
-    """
-    Belirli bir görevi getir
-    """
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Görev bulunamadı")
-    return task
 
 
 @router.put("/tasks/{task_id}")
