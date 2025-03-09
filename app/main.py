@@ -49,3 +49,4 @@ def health_check():
 @app.get("/")
 def read_root():
     return {"message": "🚀 FastAPI CRUD App is running!"}
+

@@ -1,6 +1,7 @@
-""" Veritabanı bağlantısı ve Redis yapılandırmalarını içeren modül. """
+"""Veritabanı bağlantısı ve Redis yapılandırmalarını içeren modül."""
 
 import os
+
 import redis.asyncio as redis
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -17,9 +18,7 @@ DB_NAME = os.getenv("POSTGRES_DB", "fastapi_crud")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
 # Uzun satırı birkaç satıra bölerek düzeltme
-DATABASE_URL = (
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # SQLAlchemy Bağlantısı
 engine = create_engine(DATABASE_URL)
@@ -46,4 +45,3 @@ async def get_redis():
     finally:
         # `aclose()` ile daha temiz kapatma
         await redis_client.aclose()
-        

@@ -1,61 +1,71 @@
-version: "3.8"
-
 services:
   postgres_db:
     image: postgres:15
-    container_name: postgres_db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: fastapi_crud
     ports:
-      - "5432:5432"
+      - "5433:5432"  # 🛑 Çakışmayı önlemek için farklı port kullan
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - backend
+      - compose_backend
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "fastapi_crud"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
+      timeout: 5s
       retries: 5
-
+ 
+  redis_cache:
+    image: redis:latest
+    ports:
+      - "6380:6379"  # 🛑 Çakışmayı önlemek için farklı port kullan
+    networks:
+      - compose_backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+ 
   fastapi_app:
     build: .
-    container_name: fastapi_app
-    restart: always
+    ports:
+      - "8001:8000"  # 🛑 Swarm ile çakışmaması için 8001 portu kullan
+    environment:
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
+      REDIS_URL: "redis://redis_cache:6379/0"
     depends_on:
       postgres_db:
         condition: service_healthy
       redis_cache:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    networks:
+      - compose_backend
+
+  test:
+    build: .
     environment:
-      DEPLOYMENT_TYPE: "compose"  # Docker ortamını belirtiyoruz
       DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
       REDIS_URL: "redis://redis_cache:6379/0"
+      PYTHONPATH: "/app"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+    networks:
+      - compose_backend
+    command: >
+      bash -c "pip install httpx pytest pytest-asyncio &&
+              cd /app &&
+              python -m pytest -v tests/"
     volumes:
-      - .:/app
-    networks:
-      - backend
-
-  redis_cache:
-    image: redis:latest
-    container_name: redis_cache
-    restart: always
-    ports:
-      - "6379:6379"
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      retries: 5
-
+      - ./:/app
 volumes:
   postgres_data:
 
 networks:
-  backend:
+  compose_backend:  # 🛑 Swarm ile çakışmaması için farklı ağ adı kullan
     driver: bridge

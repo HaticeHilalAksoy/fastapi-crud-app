@@ -1,13 +1,9 @@
-#!/bin/bash
-set -e
+#!/bin/sh
 
-echo "PostgreSQL bağlantısı bekleniyor..."
-/wait-for-it.sh postgres_db:5432 --timeout=60 --strict -- echo "PostgreSQL bağlantısı tamam!"
+echo "⏳ Waiting for PostgreSQL to be ready..."
+while ! nc -z postgres_db 5432; do
+  sleep 1
+done
+echo "✅ PostgreSQL is up - starting FastAPI..."
 
-
-echo "Redis bağlantısı kuruluyor..."
-/wait-for-it.sh redis_cache:6379 -t 30
-
-
-echo "Uygulama başlatılıyor..."
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000

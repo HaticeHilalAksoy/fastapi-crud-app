@@ -74,9 +74,7 @@ async def get_tasks(db: Session = Depends(get_db)):
     ]
 
     # 76:80 satırına ait düzeltme - uzun satırı böldüm
-    await redis.setex(
-        cache_key, 60, json.dumps(tasks_data if tasks_data else [])
-    )
+    await redis.setex(cache_key, 60, json.dumps(tasks_data if tasks_data else []))
 
     return {"cached": False, "tasks": tasks_data}
 
