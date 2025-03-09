@@ -54,9 +54,8 @@ jobs:
 
       - name: Run Tests
         env:
-          DATABASE_URL: "postgresql://postgres:mysecretpassword@localhost:5432/fastapi_crud"
-          REDIS_URL: "redis://localhost:6379/0"
           PYTHONPATH: ${{ github.workspace }}
+          TESTING: "true"
         run: |
           pytest -v tests/
 
