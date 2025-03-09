@@ -14,18 +14,28 @@ jobs:
     
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: mysecretpassword
           POSTGRES_DB: fastapi_crud
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
       redis:
         image: redis:latest
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -38,12 +48,17 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip list
+          pip install pytest pytest-asyncio httpx
 
       - name: Run Tests
+        env:
+          DATABASE_URL: "postgresql://postgres:mysecretpassword@localhost:5432/fastapi_crud"
+          REDIS_URL: "redis://localhost:6379/0"
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest
+          pytest -v tests/
 
   docker-build-and-push:
     needs: build-and-test
@@ -61,3 +76,50 @@ jobs:
 
       - name: Push Docker image
         run: docker push hhilal/fastapi-crud-app:latest
+
+  deploy-to-swarm:
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' 
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+          if_key_exists: replace
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy docker-stack.yml to server
+        run: scp ./docker-stack.yml ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/docker-stack.yml
+
+      - name: Deploy to Docker Swarm
+        run: |
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} '
+            # Pull the latest image
+            docker pull hhilal/fastapi-crud-app:latest
+            
+            # Check if stack exists
+            if docker stack ls | grep -q "fastapi_stack"; then
+              echo "Updating existing stack..."
+            else
+              echo "Deploying new stack..."
+              # Initialize swarm if not already done
+              if ! docker info | grep -q "Swarm: active"; then
+                docker swarm init
+              fi
+            fi
+            
+            # Deploy or update the stack
+            docker stack deploy -c /tmp/docker-stack.yml fastapi_stack --with-registry-auth
+            
+            # Verify deployment
+            echo "Deployed services:"
+            docker stack services fastapi_stack
+          '

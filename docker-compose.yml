@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: fastapi_crud
     ports:
-      - "5433:5432"  # 🛑 Çakışmayı önlemek için farklı port kullan
+      - "5433:5432"  
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -20,7 +20,7 @@ services:
   redis_cache:
     image: redis:latest
     ports:
-      - "6380:6379"  # 🛑 Çakışmayı önlemek için farklı port kullan
+      - "6380:6379" 
     networks:
       - compose_backend
     healthcheck:
@@ -32,7 +32,7 @@ services:
   fastapi_app:
     build: .
     ports:
-      - "8001:8000"  # 🛑 Swarm ile çakışmaması için 8001 portu kullan
+      - "8001:8000" 
     environment:
       DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
       REDIS_URL: "redis://redis_cache:6379/0"
@@ -67,5 +67,5 @@ volumes:
   postgres_data:
 
 networks:
-  compose_backend:  # 🛑 Swarm ile çakışmaması için farklı ağ adı kullan
+  compose_backend: 
     driver: bridge
