@@ -6,13 +6,13 @@ from httpx import AsyncClient
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
+# Doğru import yolunu kullanın
+from app.database import get_redis
 from app.main import app
-from app.redis_client import get_redis
 
 client = TestClient(app)
 
 # Çevre değişkenlerinden bağlantı bilgilerini al
-# Bu şekilde hem local hem de CI ortamında çalışacak
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:mysecretpassword@localhost:5432/fastapi_crud"
 )
