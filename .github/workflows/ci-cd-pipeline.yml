@@ -91,15 +91,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: unnecessary
           if_key_exists: replace
-      - name: Debug Services
-        run: |
-          echo "Checking PostgreSQL connection"
-          pg_isready -h localhost -p 5432
-          echo "Checking Redis connection"
-          redis-cli -h localhost ping
-          echo "Network information"
-          docker ps
-          docker network ls
+          
       - name: Adding Known Hosts
         run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
