@@ -79,7 +79,7 @@ jobs:
   deploy-to-swarm:
     needs: docker-build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev' 
+    if: github.ref == 'refs/heads/dev'
     
     steps:
       - name: Checkout repository
@@ -118,7 +118,24 @@ jobs:
             # Deploy or update the stack
             docker stack deploy -c /tmp/docker-stack.yml fastapi_stack --with-registry-auth
             
-            # Verify deployment
+            # Bekle ve hizmetlerin başlamasını sağla
+            sleep 30
+            
+            # Servislerin çalışıp çalışmadığını kontrol et
             echo "Deployed services:"
             docker stack services fastapi_stack
+          '
+
+      - name: Debug Services
+        run: |
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} '
+            echo "Checking PostgreSQL connection"
+            docker run --rm --network fastapi_stack_backend postgres:15 pg_isready -h postgres_db -p 5432
+            
+            echo "Checking Redis connection"
+            docker run --rm --network fastapi_stack_backend redis redis-cli -h redis_cache ping
+            
+            # Verify deployment
+            echo "Service logs:"
+            docker service logs fastapi_stack_postgres_db --tail 10
           '
