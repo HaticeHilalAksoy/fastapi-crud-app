@@ -1,43 +1,71 @@
-version: '3.8'
-
 services:
-  db:
+  postgres_db:
     image: postgres:15
-    container_name: postgres_db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: fastapi_crud 
+      POSTGRES_DB: fastapi_crud
     ports:
-      - "5432:5432"
+      - "5433:5432"  
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - compose_backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
+      timeout: 5s
       retries: 5
-      start_period: 10s
-
-  app:
-    build: .
-    container_name: fastapi_app
-    restart: always
-    depends_on:
-      - db
-      - redis
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: "postgresql://postgres:mysecretpassword@db:5432/fastapi_crud"
-      REDIS_URL: "redis://redis:6379/0"
-
-  redis:
+ 
+  redis_cache:
     image: redis:latest
-    container_name: redis_cache
-    restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379" 
+    networks:
+      - compose_backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+ 
+  fastapi_app:
+    build: .
+    ports:
+      - "8001:8000" 
+    environment:
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
+      REDIS_URL: "redis://redis_cache:6379/0"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+    networks:
+      - compose_backend
 
+  test:
+    build: .
+    environment:
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
+      REDIS_URL: "redis://redis_cache:6379/0"
+      PYTHONPATH: "/app"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+    networks:
+      - compose_backend
+    command: >
+      bash -c "pip install httpx pytest pytest-asyncio &&
+              cd /app &&
+              python -m pytest -v tests/"
+    volumes:
+      - ./:/app
 volumes:
   postgres_data:
+
+networks:
+  compose_backend: 
+    driver: overlay

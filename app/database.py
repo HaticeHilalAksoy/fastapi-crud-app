@@ -1,24 +1,46 @@
+"""Module containing database connection and Redis configurations."""
+
 import os
+
+import redis.asyncio as redis
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import redis
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:mysecretpassword@localhost:5432/fastapi_crud")
-REDIS_URL = "redis://redis_cache:6379"
+load_dotenv()
+
+
+DB_HOST = os.getenv("DB_HOST", "postgres_db")
+DB_USER = os.getenv("POSTGRES_USER", "postgres")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "mysecretpassword")
+DB_NAME = os.getenv("POSTGRES_DB", "fastapi_crud")
+DB_PORT = os.getenv("DB_PORT", "5432")
+
+
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-def get_redis():
-    
-    return redis.Redis.from_url(REDIS_URL, decode_responses=True)
+REDIS_HOST = os.getenv("REDIS_HOST", "redis_cache")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+
+
+async def get_redis():
+    """
+    Asynchronous function that manages the Redis connection.
+    """
+    redis_client = redis.Redis(
+        host=REDIS_HOST,
+        port=int(REDIS_PORT),
+        decode_responses=True,
+    )
+    try:
+        yield redis_client
+    finally:
+        await redis_client.aclose()

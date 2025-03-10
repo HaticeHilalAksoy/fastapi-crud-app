@@ -1,0 +1,34 @@
+name: Linter Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install flake8 black pylint isort
+
+      - name: Run Flake8
+        run: flake8 app/ --max-line-length=150 --ignore=E501 --count --statistics --exit-zero
+
+      - name: Run Black
+        run: black --check --diff app/ || true
+
+      - name: Run Pylint
+        run: pylint app/ --disable=C0114,C0115,C0116,R0903,E0401,W0718 || true
+
+      - name: Run isort
+        run: isort --check --diff app/ || true

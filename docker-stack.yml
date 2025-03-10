@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  postgres_db:
+    image: postgres:15
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: fastapi_crud
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "fastapi_crud"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+  redis_cache:
+    image: redis:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  fastapi_app:
+    image: hhilal/fastapi-crud-app:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: ingress  
+    environment:
+      DEPLOYMENT_TYPE: "swarm"
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres_db:5432/fastapi_crud"
+      REDIS_URL: "redis://redis_cache:6379/0"
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
+    driver: overlay
