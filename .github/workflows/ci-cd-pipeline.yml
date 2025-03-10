@@ -96,7 +96,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa,ecdsa,ed25519 -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
+          shell: bash
       - name: Copy docker-stack.yml to server
         run: scp ./docker-stack.yml ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/docker-stack.yml
 
