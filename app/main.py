@@ -1,5 +1,5 @@
 """
-FastAPI uygulamasının ana giriş noktası.
+The main entry point for the FastAPI application.
 """
 
 import time
@@ -27,10 +27,10 @@ def wait_for_db():
     while retries > 0:
         try:
             Base.metadata.create_all(bind=engine)
-            print("✅ Database connection established!")
+            print("Database connection established!")
             return
         except Exception as e:
-            print(f"❌ Database connection failed: {e}")
+            print(f"Database connection failed: {e}")
             retries -= 1
             time.sleep(5)
 
@@ -48,5 +48,4 @@ def health_check():
 
 @app.get("/")
 def read_root():
-    return {"message": "🚀 FastAPI CRUD App is running!"}
-
+    return {"message": "FastAPI CRUD App is running!"}

@@ -1,5 +1,5 @@
 """
-Bu dosya SQLAlchemy modellerini içerir.
+This file contains SQLAlchemy models.
 """
 
 from sqlalchemy import Boolean, Column, Integer, String
@@ -9,7 +9,7 @@ from app.database import Base
 
 class Task(Base):
     """
-    Task modeli, görev bilgilerini tutan SQLAlchemy modelidir.
+    Task model is a SQLAlchemy model that holds task information.
     """
 
     __tablename__ = "tasks"

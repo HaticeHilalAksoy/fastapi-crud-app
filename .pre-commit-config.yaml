@@ -20,4 +20,4 @@ repos:
     rev: v3.0.2
     hooks:
       - id: pylint
-        args: ["--disable=C0114,C0115,C0116,R0903,E0401,W0718"]
+        args: ["--disable=C0114,C0115,C0116,R0903,E0401,W0718,W0621"] 

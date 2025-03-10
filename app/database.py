@@ -1,4 +1,4 @@
-"""Veritabanı bağlantısı ve Redis yapılandırmalarını içeren modül."""
+"""Module containing database connection and Redis configurations."""
 
 import os
 
@@ -33,7 +33,7 @@ REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 
 async def get_redis():
     """
-    Redis bağlantısını yöneten asenkron fonksiyon.
+    Asynchronous function that manages the Redis connection.
     """
     redis_client = redis.Redis(
         host=REDIS_HOST,

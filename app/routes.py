@@ -1,5 +1,5 @@
 """
-Görev yönetimi için API uç noktalarını içeren modül.
+Module containing API endpoints for task management.
 """
 
 import json
@@ -15,14 +15,14 @@ router = APIRouter()
 
 
 class TaskCreate(BaseModel):
-    """Yeni görev oluşturma modelini tanımlayan sınıf."""
+    """Class that defines the new task creation model."""
 
     title: str
     description: str
 
 
 class TaskUpdate(BaseModel):
-    """Mevcut görevi güncelleme modelini tanımlayan sınıf."""
+    """Class that defines the current task update model."""
 
     title: str
     description: str
@@ -31,7 +31,9 @@ class TaskUpdate(BaseModel):
 
 def get_db():
     """
-    Veritabanı bağlantısını yöneten bağımlılık fonksiyonu.
+
+    Dependency function that manages database connection.
+
     """
     db = SessionLocal()
     try:
@@ -43,7 +45,8 @@ def get_db():
 @router.get("/tasks/")
 async def get_tasks(db: Session = Depends(get_db)):
     """
-    Tüm görevleri getir (Redis Cache Kullanımı).
+
+    Fetch all tasks (Using Redis Cache) 60 sec wait rule is also included.
     """
     redis = await anext(get_redis())
     cache_key = "tasks_list"
@@ -81,7 +84,7 @@ async def get_tasks(db: Session = Depends(get_db)):
 @router.post("/tasks/")
 async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     """
-    Yeni görev oluştur (Redis Cache Güncellemesi Dahil).
+    Create new task (Including Redis Cache Update).
     """
     redis = await anext(get_redis())
     new_task = Task(
@@ -119,12 +122,12 @@ async def update_task(
     db: Session = Depends(get_db),
 ):
     """
-    Görevi güncelle (Redis Cache Güncellemesi Dahil).
+    Update task (Including Redis Cache Update).
     """
     redis = await anext(get_redis())
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Görev bulunamadı")
+        raise HTTPException(status_code=404, detail="Task not Found")
 
     task.title = task_update.title
     task.description = task_update.description
@@ -152,12 +155,12 @@ async def update_task(
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: int, db: Session = Depends(get_db)):
     """
-    Görevi sil (Redis Cache Güncellemesi Dahil).
+    Delete task (Including Redis Cache Update).
     """
     redis = await anext(get_redis())
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Görev bulunamadı")
+        raise HTTPException(status_code=404, detail="Task not Found")
 
     db.delete(task)
     db.commit()
@@ -170,4 +173,4 @@ async def delete_task(task_id: int, db: Session = Depends(get_db)):
         tasks_data = [t for t in tasks_data if t["id"] != task_id]
         await redis.setex(cache_key, 60, json.dumps(tasks_data))
 
-    return {"message": "Görev başarıyla silindi"}
+    return {"message": "Task deleted successfully"}
